@@ -6,15 +6,20 @@ Decrypt assets for the game (WIP)
 - Most other visual assets (other PNGs, Live2D - due to encrypted PNG) cannot be decrypted for now
 ## Usage
 ```
-python main.py -h
+> python main.py -h
+
+Date A Live: Spirit Pledge Assets Decryption tool
+
+Decrypt all assets in source directory and save in destination directory
 
 Usage: main.py [options]
 
 Options:
   -h, --help            show this help message and exit
-  -i "DIR_IN", --input="DIR_IN"
-                        Encrypted Data Directory
-  -o "DIR_OUT", --output="DIR_OUT"
-                        Decrypted Data Directory
+  -i "INPUT", --input="INPUT"
+                        Encrypted Data Source (folder/file; if file, use -f)
+  -o "OUTPUT", --output="OUTPUT"
+                        Decrypted Data Destination (MUST BE A FOLDER)
+  -f, --file            Single file decryption mode
   -v, --verbose         Print status messages to stdout
 ```
