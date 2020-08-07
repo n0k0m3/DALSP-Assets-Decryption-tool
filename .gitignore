@@ -1,1 +1,5 @@
 draft.py
+*.c
+tmp*
+.vscode
+*pycache*

@@ -6,9 +6,9 @@ Decrypt assets for the game (WIP)
 - Most other visual assets (movies,cg,l2d) cannot be decrypted for now
 ## Usage
 ```
-python dalsp_crypt.py -h
+python main.py -h
 
-Usage: dalsp_crypt.py [options]
+Usage: main.py [options]
 
 Options:
   -h, --help            show this help message and exit
