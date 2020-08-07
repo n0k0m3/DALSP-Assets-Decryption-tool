@@ -24,19 +24,22 @@ def decryptZIP(param_1, param_2):
 
 
 def decryptToPcm(pcVar5, iVar4):
-    bVar2 = pcVar5[3]
-    iVar10 = iVar4 + -4
-    iVar6 = iVar10
-    pbVar9 = pcVar5[4:]
-    if 4 < iVar4:
-        i = 0
-        while True:
-            iVar6 = iVar6 + -1
-            pbVar9[i] = pbVar9[i] ^ bVar2
-            i = i + 1
-            if not (iVar6 != 0):
-                break
-    return bytes(pbVar9), 1
+    while pcVar5[:3] == [0xFB, 0x1B, 0x9D]:
+        bVar2 = pcVar5[3]
+        iVar10 = iVar4 + -4
+        iVar6 = iVar10
+        pbVar9 = pcVar5[4:]
+        if 4 < iVar4:
+            i = 0
+            while True:
+                iVar6 = iVar6 + -1
+                pbVar9[i] = pbVar9[i] ^ bVar2
+                i = i + 1
+                if not (iVar6 != 0):
+                    break
+        pcVar5 = pbVar9
+        iVar4 = len(pcVar5)
+    return bytes(pcVar5), 1
 
 
 def decrypt_assets(data):
@@ -61,6 +64,23 @@ def write(path, content):
     open(path, 'wb').write(content)
 
 
+def decrypt_file(path,relpath,name,output_path,options):
+    with open(path, "rb") as file:
+        data = file.read()
+        if options.verbose:
+            print("Reading:", os.path.join(relpath, name))
+        buff, retval = decrypt_assets(data)
+        if options.verbose:
+            debug_dict = {
+                -1: "Wrong decryption method, write to destination anyway",
+                0: "File is not encrypted, write to destination anyway",
+                1: "Decrypted",
+            }
+            print(debug_dict[retval])
+            print()
+        write(os.path.join(output_path, relpath, name), buff)
+
+
 def decrypt_folder(options):
     input_path = options.input_path
     output_path = options.output_path
@@ -68,21 +88,14 @@ def decrypt_folder(options):
         for name in files:
             relpath = os.path.relpath(root, input_path)
             path = os.path.join(root, name)
-            with open(path, "rb") as file:
-                data = file.read()
-                if options.verbose:
-                    print("Reading:", os.path.join(relpath, name))
-                buff, retval = decrypt_assets(data)
-                if options.verbose:
-                    debug_dict = {
-                        -1: "Wrong decryption method, write to destination anyway",
-                        0: "File is not encrypted, write to destination anyway",
-                        1: "Decrypted",
-                    }
-                    print(debug_dict[retval])
-                    print()
-                write(os.path.join(output_path, relpath, name), buff)
+            decrypt_file(path,relpath,name,output_path,options)
 
+def decrypt_single_file(options):
+    input_path = options.input_path
+    output_path = options.output_path
+    relpath = ""
+    name = os.path.basename(input_path)
+    decrypt_file(input_path,relpath,name,output_path,options)
 
 if __name__ == "__main__":
     with open("tmp/cap2.mp4", "rb") as file:
