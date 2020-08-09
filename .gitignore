@@ -3,3 +3,4 @@ draft.py
 tmp*
 .vscode
 *pycache*
+*.log
