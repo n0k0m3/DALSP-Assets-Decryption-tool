@@ -73,7 +73,8 @@ def unpack_PVR(filepath, options):
             if options.verbose:
                 print("Unpacking PVR: ", filename)
             command = ["texturepacker", filepath,
-                       "--sheet", fileout, "--data", plistout]
+                       "--sheet", fileout, "--data", plistout,
+                       "--max-size", "4096"]
             process = subprocess.Popen(
                 command, stdout=FNULL, stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
