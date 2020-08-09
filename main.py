@@ -15,7 +15,13 @@ def main():
                       help="Single file decryption mode")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
-                      help="Print status messages to stdout")
+                      help="Print debug messages to stdout")
+    parser.add_option("-u", "--unpack",
+                      action="store_true", dest="unpackPVR", default=False,
+                      help="Unpack PVR assets")
+    parser.add_option("-k", "--keepPVR",
+                      action="store_true", dest="keepPVR", default=False,
+                      help="Keep PVR assets after unpack")
 
     (options, args) = parser.parse_args()
 

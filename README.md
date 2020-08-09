@@ -1,8 +1,11 @@
 # Date A Live: Spirit Pledge Assets Decryption tool
 Decrypt assets for the game (WIP)
+## Requirements
+- [Python 3+](https://www.python.org/downloads/)
+- [TexturePacker](https://www.codeandweb.com/texturepacker/download) (unpack PVR files) [added to PATH](https://github.com/n0k0m3/DALSP-Assets-Decryption-tool/wiki/Add-TexturePacker-to-PATH)
 ## Notes
-- This tool can only decrypt textassets (lua,json,etc.), visual/audio assets (mp3,mp4)
-- Some PNGs can be decrypted to PVR encrypted (will need to decrypt later)  
+- This tool can only decrypt textassets (lua,json,etc.), audio/video assets (mp3,mp4)
+- Some PNGs can be decrypted to PVR (will need to unpack with `TexturePacker`)  
 - Most other visual assets (other PNGs, Live2D - due to encrypted PNG) cannot be decrypted for now
 ## Usage
 ```
@@ -21,5 +24,7 @@ Options:
   -o "OUTPUT", --output="OUTPUT"
                         Decrypted Data Destination (MUST BE A FOLDER)
   -f, --file            Single file decryption mode
-  -v, --verbose         Print status messages to stdout
-```
+  -v, --verbose         Print debug messages to stdout
+  -u, --unpack          Unpack PVR assets
+  -k, --keepPVR         Keep PVR assets after unpack
+  ```

@@ -1,6 +1,7 @@
 import gzip
 import os
 import sys
+import subprocess
 
 
 def decryptZIP(param_1, param_2):
@@ -64,21 +65,53 @@ def write(path, content):
     open(path, 'wb').write(content)
 
 
-def decrypt_file(path,relpath,name,output_path,options):
+def unpack_PVR(filepath, options):
+    if options.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
+        filename = os.path.basename(filepath)
+        fileout = os.path.splitext(filepath)[0]+".png"
+        plistout = os.path.join(options.output_path, "info.plist")
+        with open(os.devnull, 'w') as FNULL:
+            if options.verbose:
+                print("Unpacking PVR: ", filename)
+            command = ["texturepacker", filepath,
+                       "--sheet", fileout, "--data", plistout]
+            process = subprocess.Popen(
+                command, stdout=FNULL, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+        os.remove(plistout)
+        if options.verbose:
+            string = stderr.decode("utf-8")
+            if string == "":
+                print("Done. No error found.")
+            else:
+                print("There's an error, need to manually unpack")
+            print()
+        if not options.keepPVR:
+            os.remove(filepath)
+
+
+def decrypt_file(path, relpath, name, output_path, options):
     with open(path, "rb") as file:
         data = file.read()
         if options.verbose:
             print("Reading:", os.path.join(relpath, name))
         buff, retval = decrypt_assets(data)
+        while buff[:3] == b"MNG":
+            buff = buff[7:]
+        if buff[:3] == b"PVR":
+            name = os.path.splitext(name)[0]+".pvr"
         if options.verbose:
             debug_dict = {
-                -1: "Wrong decryption method, write to destination anyway",
+                -1: "Wrong decryption method, will not write to destination",
                 0: "File is not encrypted, write to destination anyway",
                 1: "Decrypted",
             }
             print(debug_dict[retval])
             print()
-        write(os.path.join(output_path, relpath, name), buff)
+        if retval != -1:
+            filepath = os.path.join(output_path, relpath, name)
+            write(filepath, buff)
+            unpack_PVR(filepath, options)
 
 
 def decrypt_folder(options):
@@ -88,24 +121,21 @@ def decrypt_folder(options):
         for name in files:
             relpath = os.path.relpath(root, input_path)
             path = os.path.join(root, name)
-            decrypt_file(path,relpath,name,output_path,options)
+            decrypt_file(path, relpath, name, output_path, options)
+
 
 def decrypt_single_file(options):
     input_path = options.input_path
     output_path = options.output_path
     relpath = ""
     name = os.path.basename(input_path)
-    decrypt_file(input_path,relpath,name,output_path,options)
+    decrypt_file(input_path, relpath, name, output_path, options)
+
 
 if __name__ == "__main__":
-    with open("tmp/cap2.mp4", "rb") as file:
-        data = file.read()
-        buff, retval = decrypt_assets(data)
-        debug_dict = {
-            -1: "Wrong decryption method, write to destination anyway",
-            0: "File is not encrypted, write to destination anyway",
-            1: "Decrypted",
-        }
-        print(debug_dict[retval])
-        print()
-        write("tmp_dec/cap2.mp4", buff)
+    class options:
+        input_path = 'tmp/cap2.mp4'
+        output_path = 'tmp_dec/'
+        file_mode = False
+        verbose = True
+    decrypt_single_file(options)
