@@ -33,7 +33,7 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    if options.input_path == None or options.output_path == None:
+    if options.input_path is None or options.output_path is None:
         print()
         print("No input or output path specified. Run \"python main.py -h\" for more details")
         print()

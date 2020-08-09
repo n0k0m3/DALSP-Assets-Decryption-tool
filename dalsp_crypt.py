@@ -1,8 +1,6 @@
 import gzip
 import os
-import sys
 import subprocess
-import glob
 
 
 def decryptZIP(param_1, param_2):
@@ -69,7 +67,7 @@ def write(path, content):
 def unpack_PVR(filepath, options):
     if options.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
         filename = os.path.basename(filepath)
-        fileout = os.path.splitext(filepath)[0]+".png"
+        fileout = os.path.splitext(filepath)[0] + ".png"
         plistout = os.path.join(options.output_path, "info.plist")
         with open(os.devnull, 'w') as FNULL:
             if options.verbose:
@@ -106,7 +104,7 @@ def decrypt_file(path, relpath, name, output_path, options):
         while buff[:3] == b"MNG":
             buff = buff[7:]
         if buff[:3] == b"PVR":
-            name = os.path.splitext(name)[0]+".pvr"
+            name = os.path.splitext(name)[0] + ".pvr"
         if options.verbose:
             debug_dict = {
                 -1: "Wrong decryption method, will not write to destination",
@@ -145,4 +143,6 @@ if __name__ == "__main__":
         output_path = 'tmp_dec/'
         file_mode = False
         verbose = True
+
+
     decrypt_single_file(options)
