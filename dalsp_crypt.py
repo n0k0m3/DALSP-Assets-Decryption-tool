@@ -2,6 +2,7 @@ import gzip
 import os
 import sys
 import subprocess
+import glob
 
 
 def decryptZIP(param_1, param_2):
@@ -78,19 +79,25 @@ def unpack_PVR(filepath, options):
             process = subprocess.Popen(
                 command, stdout=FNULL, stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
-        os.remove(plistout)
         if options.verbose:
             string = stderr.decode("utf-8")
             if string == "":
                 print("Done. No error found.")
+                if not options.keepPVR:
+                    os.remove(filepath)
             else:
                 print("There's an error, need to manually unpack")
+                print(string)
             print()
-        if not options.keepPVR:
-            os.remove(filepath)
 
 
 def decrypt_file(path, relpath, name, output_path, options):
+    fileexist = os.path.join(output_path, relpath, name)
+    if not options.overwrite:
+        if os.path.isfile(fileexist):
+            if options.verbose:
+                print(name, "already exists at destination, skipping...")
+            return
     with open(path, "rb") as file:
         data = file.read()
         if options.verbose:

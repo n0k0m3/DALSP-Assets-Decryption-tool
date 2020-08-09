@@ -27,4 +27,7 @@ Options:
   -v, --verbose         Print debug messages to stdout
   -u, --unpack          Unpack PVR assets
   -k, --keepPVR         Keep PVR assets after unpack
+  -w, --overwrite       Overwrite assets even if decrypted assets exist at
+                        destination
+  -d, --debug           Write debug info in stdout to file
   ```
