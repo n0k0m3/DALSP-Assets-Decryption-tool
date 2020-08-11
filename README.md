@@ -4,7 +4,7 @@ Decrypt assets for the game (WIP)
 - [Python 3+](https://www.python.org/downloads/)
 - [TexturePacker](https://www.codeandweb.com/texturepacker/download) (unpack PVR files) [added to PATH](https://github.com/n0k0m3/DALSP-Assets-Decryption-tool/wiki/Add-TexturePacker-to-PATH)
 ## Notes
-- This tool can only decrypt textassets (lua,json,etc.), audio/video assets (mp3,mp4)
+- This tool can decrypt textassets (lua,json,etc.), audio/video assets (mp3,mp4)
 - Some PNGs can be decrypted to PVR (will need to unpack with `TexturePacker`)  
 - Most other visual assets (other PNGs, Live2D - due to encrypted PNG) cannot be decrypted for now
 ## Usage
