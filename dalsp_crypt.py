@@ -3,55 +3,54 @@ import os
 import subprocess
 
 
-def decryptZIP(param_1, param_2):
-    param_1[1] = 0x1f
-    param_1[2] = 0x8b
-    uVar3 = 0x14
-    if (param_2 - 3) < int(str(0x15)):
-        uVar3 = param_2 - 3
-    if 0 < uVar3:
-        iVar4 = 2
-        iVar1 = uVar3 + 2
+def decryptZIP(file_bytes_list, file_size):
+    file_bytes_list[1] = 0x1f
+    file_bytes_list[2] = 0x8b
+    var_1 = 0x14
+    if (file_size - 3) < int(str(0x15)):
+        var_1 = file_size - 3
+    if 0 < var_1:
+        i = 2
+        n = var_1 + 2
     while True:
-        uVar2 = uVar3 % 0x2d
-        uVar3 = param_1[iVar4 + 1] + uVar2
-        param_1[iVar4 + 1] = uVar2 ^ param_1[iVar4 + 1]
-        iVar4 = iVar4 + 1
-        if not (iVar4 < iVar1):
+        var_2 = var_1 % 0x2d
+        var_1 = file_bytes_list[i + 1] + var_2
+        file_bytes_list[i + 1] = var_2 ^ file_bytes_list[i + 1]
+        i = i + 1
+        if not (i < n):
             break
-    data = gzip.decompress(bytes(param_1[1:]))
+    data = gzip.decompress(bytes(file_bytes_list[1:]))
     return data, 1
 
 
-def decryptToPcm(pcVar5, iVar4):
-    while pcVar5[:3] == [0xFB, 0x1B, 0x9D]:
-        bVar2 = pcVar5[3]
-        iVar10 = iVar4 + -4
-        iVar6 = iVar10
-        pbVar9 = pcVar5[4:]
-        if 4 < iVar4:
+def decryptToPcm(file_bytes_list, file_size):
+    while file_bytes_list[:3] == [0xFB, 0x1B, 0x9D]:
+        xor_var = file_bytes_list[3]
+        n = file_size - 4
+        buff = file_bytes_list[4:]
+        if 4 < file_size:
             i = 0
             while True:
-                iVar6 = iVar6 + -1
-                pbVar9[i] = pbVar9[i] ^ bVar2
+                n = n - 1
+                buff[i] = buff[i] ^ xor_var
                 i = i + 1
-                if not (iVar6 != 0):
+                if not (n != 0):
                     break
-        pcVar5 = pbVar9
-        iVar4 = len(pcVar5)
-    return bytes(pcVar5), 1
+        file_bytes_list = buff
+        file_size = len(file_bytes_list)
+    return bytes(file_bytes_list), 1
 
 
 def decrypt_assets(data):
-    param_1 = list(data)
-    param_2 = len(param_1)
-    if param_1[:2] == [0xf8, 0x8b]:
-        if param_1[2] in [0x2d, 0x3d]:
-            data, retval = decryptZIP(param_1, param_2)
+    file_bytes_list = list(data)
+    file_size = len(file_bytes_list)
+    if file_bytes_list[:2] == [0xf8, 0x8b]:
+        if file_bytes_list[2] in [0x2d, 0x3d]:
+            data, retval = decryptZIP(file_bytes_list, file_size)
         else:
             retval = -1
-    elif param_1[:3] == [0xFB, 0x1B, 0x9D]:
-        data, retval = decryptToPcm(param_1, param_2)
+    elif file_bytes_list[:3] == [0xFB, 0x1B, 0x9D]:
+        data, retval = decryptToPcm(file_bytes_list, file_size)
     else:
         retval = 0
     return data, retval
