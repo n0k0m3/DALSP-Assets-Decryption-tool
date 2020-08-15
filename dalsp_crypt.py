@@ -90,7 +90,7 @@ def unpack_PVR(filepath, options):
         with open(os.devnull, 'w') as FNULL:
             if options.verbose:
                 print("Unpacking PVR: ", filename)
-            command = ["texturepacker", filepath,
+            command = ["TexturePacker", filepath,
                        "--sheet", fileout, "--data", plistout,
                        "--max-size", "4096"]
             process = subprocess.Popen(
