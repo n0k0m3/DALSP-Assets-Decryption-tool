@@ -1,6 +1,10 @@
 import gzip
+import io
 import os
 import subprocess
+
+import lz4.block
+from PIL import Image
 
 
 def decryptZIP(file_bytes_list, file_size):
@@ -41,12 +45,27 @@ def decryptToPcm(file_bytes_list, file_size):
     return bytes(file_bytes_list), 1
 
 
+def decryptLZ4(file_bytes_list):
+    buff = file_bytes_list
+    while buff[:3] == [0xf8, 0x8b, 0x2b]:
+        buff = bytes(buff[3:])
+        buff = lz4.block.decompress(buff)
+    while buff[:3] == b"MNG":
+        buff = buff[7:]
+    im = Image.open(io.BytesIO(buff))
+    data = io.BytesIO()
+    im.save(data, "png")
+    return data.getvalue(), 1
+
+
 def decrypt_assets(data):
     file_bytes_list = list(data)
     file_size = len(file_bytes_list)
     if file_bytes_list[:2] == [0xf8, 0x8b]:
         if file_bytes_list[2] in [0x2d, 0x3d]:
             data, retval = decryptZIP(file_bytes_list, file_size)
+        elif file_bytes_list[2] == 0x2b:
+            data, retval = decryptLZ4(file_bytes_list)
         else:
             retval = -1
     elif file_bytes_list[:3] == [0xFB, 0x1B, 0x9D]:

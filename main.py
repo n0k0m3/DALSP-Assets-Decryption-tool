@@ -1,7 +1,8 @@
-import dalsp_crypt
-from optparse import OptionParser
 import os
 import sys
+from optparse import OptionParser
+
+import dalsp_crypt
 
 
 def main():
