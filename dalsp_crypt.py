@@ -82,10 +82,10 @@ def write(path, content):
     open(path, 'wb').write(content)
 
 
-def unpack_PVR(filepath, options):
+def unpack_PVR(filepath, options, base_ext):
     if options.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
         filename = os.path.basename(filepath)
-        fileout = os.path.splitext(filepath)[0] + ".png"
+        fileout = os.path.splitext(filepath)[0] + base_ext
         plistout = os.path.join(options.output_path, "info.plist")
         with open(os.devnull, 'w') as FNULL:
             if options.verbose:
@@ -109,6 +109,7 @@ def unpack_PVR(filepath, options):
 
 
 def decrypt_file(path, relpath, name, output_path, options):
+    base_ext = os.path.splitext(name)[1]
     fileexist = os.path.join(output_path, relpath, name)
     if not options.overwrite:
         if os.path.isfile(fileexist):
@@ -135,7 +136,7 @@ def decrypt_file(path, relpath, name, output_path, options):
         if retval != -1:
             filepath = os.path.join(output_path, relpath, name)
             write(filepath, buff)
-            unpack_PVR(filepath, options)
+            unpack_PVR(filepath, options, base_ext)
 
 
 def decrypt_folder(options):
