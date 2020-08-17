@@ -1,38 +1,40 @@
 import gzip
 import io
+import lz4.block
 import os
 import subprocess
-
-import lz4.block
 from PIL import Image
 
 
-def decryptZIP(file_bytes_list, file_size):
-    file_bytes_list[1] = 0x1f
-    file_bytes_list[2] = 0x8b
-    var_1 = 0x14
-    if (file_size - 3) < int(str(0x15)):
-        var_1 = file_size - 3
-    if 0 < var_1:
-        i = 2
-        n = var_1 + 2
-    while True:
-        var_2 = var_1 % 0x2d
-        var_1 = file_bytes_list[i + 1] + var_2
-        file_bytes_list[i + 1] = var_2 ^ file_bytes_list[i + 1]
-        i = i + 1
-        if not (i < n):
-            break
-    data = gzip.decompress(bytes(file_bytes_list[1:]))
+def decryptZIP(data, data_size):
+    data = bytearray(data)
+    if data[:2] == bytes([0xf8, 0x8b]) and data[2] in [0x2d, 0x3d]:
+        data[1] = 0x1f
+        data[2] = 0x8b
+        var_1 = 0x14
+        if (data_size - 3) < int(str(0x15)):
+            var_1 = data_size - 3
+        if 0 < var_1:
+            i = 2
+            n = var_1 + 2
+        while True:
+            var_2 = var_1 % 0x2d
+            var_1 = data[i + 1] + var_2
+            data[i + 1] = var_2 ^ data[i + 1]
+            i = i + 1
+            if not (i < n):
+                break
+        data = gzip.decompress(data[1:])
     return data, 1
 
 
-def decryptToPcm(file_bytes_list, file_size):
-    while file_bytes_list[:3] == [0xFB, 0x1B, 0x9D]:
-        xor_var = file_bytes_list[3]
-        n = file_size - 4
-        buff = file_bytes_list[4:]
-        if 4 < file_size:
+def decryptToPcm(data, data_size):
+    data = bytearray(data)
+    while data[:3] == bytes([0xFB, 0x1B, 0x9D]):
+        xor_var = data[3]
+        n = data_size - 4
+        buff = data[4:]
+        if 4 < data_size:
             i = 0
             while True:
                 n = n - 1
@@ -40,36 +42,35 @@ def decryptToPcm(file_bytes_list, file_size):
                 i = i + 1
                 if not (n != 0):
                     break
-        file_bytes_list = buff
-        file_size = len(file_bytes_list)
-    return bytes(file_bytes_list), 1
+        data = buff
+        data_size = len(data)
+    return bytes(data), 1
 
 
-def decryptLZ4(file_bytes_list):
-    buff = file_bytes_list
-    while buff[:3] == [0xf8, 0x8b, 0x2b]:
-        buff = bytes(buff[3:])
-        buff = lz4.block.decompress(buff)
-    while buff[:3] == b"MNG":
-        buff = buff[7:]
-    im = Image.open(io.BytesIO(buff))
-    data = io.BytesIO()
-    im.save(data, "png")
-    return data.getvalue(), 1
+def decryptLZ4(data):
+    if data[:3] == bytes([0xf8, 0x8b, 0x2b]):
+        while data[:3] == bytes([0xf8, 0x8b, 0x2b]):
+            data = bytes(data[3:])
+            data = lz4.block.decompress(data)
+        while data[:3] == b"MNG":
+            data = data[7:]
+        im = Image.open(io.BytesIO(data))
+        data = io.BytesIO()
+        im.save(data, "png")
+        data = data.getvalue()
+    return data, len(data)
 
 
 def decrypt_assets(data):
-    file_bytes_list = list(data)
-    file_size = len(file_bytes_list)
-    if file_bytes_list[:2] == [0xf8, 0x8b]:
-        if file_bytes_list[2] in [0x2d, 0x3d]:
-            data, retval = decryptZIP(file_bytes_list, file_size)
-        elif file_bytes_list[2] == 0x2b:
-            data, retval = decryptLZ4(file_bytes_list)
+    if data[:2] == bytes([0xf8, 0x8b]):
+        if data[2] in [0x2d, 0x3d, 0x2b]:
+            data, data_size = decryptLZ4(data)
+            data, retval = decryptZIP(data, data_size)
         else:
             retval = -1
-    elif file_bytes_list[:3] == [0xFB, 0x1B, 0x9D]:
-        data, retval = decryptToPcm(file_bytes_list, file_size)
+    elif data[:3] == bytes([0xFB, 0x1B, 0x9D]):
+        data_size = len(data)
+        data, retval = decryptToPcm(data, data_size)
     else:
         retval = 0
     return data, retval
