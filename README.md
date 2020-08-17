@@ -1,5 +1,5 @@
 # Date A Live: Spirit Pledge Assets Decryption tool
-Decrypt assets for the game (WIP)
+Decrypt assets for the game
 ## Requirements
 - [Python 3+](https://www.python.org/downloads/)
 - pip modules `lz4-python` and `Pillow`: `pip install -r requirements.txt`
