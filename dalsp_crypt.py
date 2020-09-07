@@ -69,7 +69,6 @@ class initWithMNGData:
             filepath_alpha = None
         im_rgb = Image.open(filepath).convert("RGB")
         im_a = Image.open(filepath_alpha).convert("L")
-        print(im_rgb.mode,im_a.mode)
         im_rgba = im_rgb.copy()
         im_rgba.putalpha(im_a)
         im_rgba.save(filepath)
