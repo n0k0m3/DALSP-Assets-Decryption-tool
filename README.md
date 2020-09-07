@@ -31,7 +31,7 @@ Options:
   -o "OUTPUT", --output="OUTPUT"
                         Decrypted Data Destination (MUST BE A FOLDER)
   -f, --file            Single file decryption mode
-  -v, --verbose         Print debug messages to debug.log
+  -v, --verbose         Print debug messages to stdout and debug.log
   -u, --unpack          Unpack PVR assets
   -k, --keepPVR         Keep PVR assets after unpack
   -w, --overwrite       Overwrite assets even if decrypted assets exist at

@@ -5,6 +5,19 @@ import os
 import subprocess
 from PIL import Image
 import struct
+import logging
+import sys
+
+# logger to debug.log
+FORMAT = "%(name)-25s: %(levelname)-8s %(message)s"
+logging.basicConfig(filename='debug.log', filemode='w', format=FORMAT)
+
+# logger to stdout
+console = logging.StreamHandler(sys.stdout)
+console.setLevel(logging.INFO)
+formatter = logging.Formatter(FORMAT)
+console.setFormatter(formatter)
+logging.getLogger().addHandler(console)
 
 
 class initWithMNGData:
@@ -12,6 +25,9 @@ class initWithMNGData:
         self.dal_dec = dal_dec
         self.buff = buff
         self.base_ext = os.path.splitext(self.dal_dec.name)[1]
+        if self.dal_dec.verbose:
+            self.logger = logging.getLogger('initWithMNGData')
+            self.logger.setLevel(logging.INFO)
         self.split_PVR()
 
     def split_PVR(self):
@@ -31,10 +47,10 @@ class initWithMNGData:
             filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath, image_file)
             self.unpack_PVR(filepath)
-            filepath = filepath[:-3]+"png"
+            filepath = filepath[:-3] + "png"
         else:
             filepath = None
-            print("Error Not supported image format")
+            self.logger.error("Not supported image format")
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -48,7 +64,7 @@ class initWithMNGData:
             filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
             self.unpack_PVR(filepath_alpha)
-            filepath_alpha = filepath_alpha[:-3]+"png"
+            filepath_alpha = filepath_alpha[:-3] + "png"
         else:
             filepath_alpha = None
         im_rgb = Image.open(filepath)
@@ -60,7 +76,7 @@ class initWithMNGData:
 
         buff = buff[alpha_size:]
         if buff != b"":
-            print("Error Alpha file size mismatch")
+            self.logger.error("Alpha file size mismatch")
 
     def unpack_PVR(self, filepath):
         if self.dal_dec.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
@@ -69,7 +85,7 @@ class initWithMNGData:
             plistout = os.path.join(self.dal_dec.output_path, "info.plist")
             with open(os.devnull, 'w') as FNULL:
                 if self.dal_dec.verbose:
-                    print("Unpacking PVR: ", filename)
+                    self.logger.info("Unpacking PVR: " + filename)
                 command = ["TexturePacker", filepath,
                            "--sheet", fileout, "--data", plistout,
                            "--max-size", "4096"]
@@ -79,11 +95,11 @@ class initWithMNGData:
             if self.dal_dec.verbose:
                 string = stderr.decode("utf-8")
                 if string == "":
-                    print("Done. No error found.")
+                    self.logger.info("Done. No error found.")
                 else:
-                    print("There's an error, maybe need to manually unpack")
-                    print(string)
-                print()
+                    self.logger.error("There's an error, maybe need to manually unpack")
+                    self.logger.error(string)
+                self.logger.info("")
             if not self.dal_dec.keepPVR:
                 os.remove(filepath)
 
@@ -96,6 +112,9 @@ class DateALive_decryption:
         self.overwrite = options.overwrite
         self.unpackPVR = options.unpackPVR
         self.verbose = options.verbose
+        if self.verbose:
+            self.logger = logging.getLogger('DateALive_decryption')
+            self.logger.setLevel(logging.INFO)
 
     @staticmethod
     def decryptZIP(data, data_size):
@@ -144,12 +163,6 @@ class DateALive_decryption:
             while data[:3] == bytes([0xf8, 0x8b, 0x2b]):
                 data = bytes(data[3:])
                 data = lz4.block.decompress(data)
-            # while data[:3] == b"MNG":
-            #     data = data[7:]
-            # im = Image.open(io.BytesIO(data))
-            # data = io.BytesIO()
-            # im.save(data, "png")
-            # data = data.getvalue()
         return data, len(data)
 
     def decrypt_assets(self):
@@ -179,32 +192,31 @@ class DateALive_decryption:
         if not self.overwrite:
             if os.path.isfile(file_exist):
                 if self.verbose:
-                    print(self.name, "already exists at destination, skipping...")
+                    print(self.verbose)
+                    self.logger.warning(self.name + " already exists at destination, skipping...")
                 return
         with open(self.path, "rb") as file:
             self.data = file.read()
             if self.verbose:
-                print("Reading:", os.path.join(self.relpath, self.name))
+                self.logger.info("Reading: " + os.path.join(self.relpath, self.name))
             buff, retval = self.decrypt_assets()
-            # while buff[:3] == b"MNG":
-            #     buff = buff[7:]
-            # if buff[:3] == b"PVR":
-            #     name = os.path.splitext(self.name)[0] + ".pvr"
             if self.verbose:
                 debug_dict = {
                     -1: "Wrong decryption method, will not write to destination",
                     0: "File is not encrypted, write to destination anyway",
                     1: "Decrypted",
                 }
-                print(debug_dict[retval])
-                print()
+                if retval == 1:
+                    self.logger.info(debug_dict[retval])
+                else:
+                    self.logger.warning(debug_dict[retval])
+                self.logger.info("")
             if retval != -1:
                 if buff[:3] == b"MNG":
                     initWithMNGData(self, buff)
                 else:
                     filepath = os.path.join(self.output_path, self.relpath, self.name)
                     self.write(filepath, buff)
-                    # unpack_PVR(filepath, self, base_ext)
 
     def decrypt_folder(self):
         for root, dirs, files in os.walk(self.input_path):
