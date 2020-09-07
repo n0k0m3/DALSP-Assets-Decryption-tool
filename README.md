@@ -7,6 +7,13 @@ Decrypt assets for the game
 ## Notes
 - This tool can decrypt textassets (lua,json,etc.), audio/video assets (mp3,mp4), some PNGs assets (Live2D textures)
 - Other PNGs can be decrypted to PVR (will need to unpack with `TexturePacker`)  
+- <details>
+  <summary>About TexturePacker Trial</summary>
+  
+  If you cannot afford TexturePacker, you can search Google for version 4.9.0 or older, these versions don't block Pro features after trial expired (you may find cracks of these versions as well).
+  
+</details>
+
 ## Usage
 ```
 > python main.py -h
@@ -24,10 +31,18 @@ Options:
   -o "OUTPUT", --output="OUTPUT"
                         Decrypted Data Destination (MUST BE A FOLDER)
   -f, --file            Single file decryption mode
-  -v, --verbose         Print debug messages to stdout
+  -v, --verbose         Print debug messages to debug.log
   -u, --unpack          Unpack PVR assets
   -k, --keepPVR         Keep PVR assets after unpack
   -w, --overwrite       Overwrite assets even if decrypted assets exist at
                         destination
-  -d, --debug           Write debug info in stdout to file
+  ```
+  ## Example
+  Directory decryption mode, overwrite, unpack PVR but not keeping file, log to debug.log
+  ```
+  python main.py -i example -o example_out -w -u -v
+  ```
+  Single file decryption mode, overwrite, unpack PVR and keeping file, log to debug.log
+  ```
+  python main.py -i example/icon-gift/531009.png -o example/icon-gift -w -u -v -k
   ```

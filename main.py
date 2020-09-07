@@ -18,7 +18,7 @@ def main():
                       help="Single file decryption mode")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
-                      help="Print debug messages to stdout")
+                      help="Print debug messages to debug.log")
     parser.add_option("-u", "--unpack",
                       action="store_true", dest="unpackPVR", default=False,
                       help="Unpack PVR assets")
@@ -28,9 +28,6 @@ def main():
     parser.add_option("-w", "--overwrite",
                       action="store_true", dest="overwrite", default=False,
                       help="Overwrite assets even if decrypted assets exist at destination")
-    parser.add_option("-d", "--debug",
-                      action="store_true", dest="debug", default=False,
-                      help="Write debug info in stdout to file")
 
     (options, args) = parser.parse_args()
 
@@ -39,17 +36,14 @@ def main():
         print("No input or output path specified. Run \"python main.py -h\" for more details")
         print()
         return
-    if options.debug:
-        sys.stdout = open("debug.log", "w")
+    decrypt = dalsp_crypt.DateALive_decryption(options)
     if not options.file_mode:
-        dalsp_crypt.decrypt_folder(options)
+        decrypt.decrypt_folder()
     else:
-        dalsp_crypt.decrypt_single_file(options)
+        decrypt.decrypt_single_file()
     plistout = os.path.join(options.output_path, "info.plist")
     if os.path.exists(plistout):
         os.remove(plistout)
-    if options.debug:
-        sys.stdout.close()
 
 
 if __name__ == "__main__":
