@@ -47,7 +47,7 @@ class initWithMNGData:
             filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath, image_file)
             self.unpack_PVR(filepath)
-            filepath = filepath[:-3] + "png"
+            filepath = filepath[:-3] + self.base_ext[1:]
         else:
             filepath = None
             self.logger.error("Not supported image format")
@@ -64,13 +64,15 @@ class initWithMNGData:
             filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
             self.unpack_PVR(filepath_alpha)
-            filepath_alpha = filepath_alpha[:-3] + "png"
+            filepath_alpha = filepath_alpha[:-3] + self.base_ext[1:]
         else:
             filepath_alpha = None
         im_rgb = Image.open(filepath).convert("RGB")
         im_a = Image.open(filepath_alpha).convert("L")
         im_rgba = im_rgb.copy()
         im_rgba.putalpha(im_a)
+        if self.base_ext[1:].lower() == "jpg":
+            im_rgba = im_rgba.convert('RGB')
         im_rgba.save(filepath)
         os.remove(filepath_alpha)
 
