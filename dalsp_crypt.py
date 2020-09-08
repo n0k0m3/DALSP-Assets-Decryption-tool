@@ -37,20 +37,29 @@ class initWithMNGData:
         image_file = buff[:image_size]
         if image_file[:4] == b'RIFF':
             im = Image.open(io.BytesIO(image_file))
+            if self.dal_dec.verbose:
+                self.logger.info("Image header format: "+im.format)
             data = io.BytesIO()
             im.save(data, self.base_ext[1:])
             png_file = data.getvalue()
             filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
+            if self.dal_dec.verbose:
+                self.logger.info("Convert "+im.format+" to "+self.base_ext[1:].upper())
             self.dal_dec.write(filepath, png_file)
         elif image_file[:3] == b'PVR':
+            if self.dal_dec.verbose:
+                self.logger.info("Image header format: PVR")
             name = os.path.splitext(self.dal_dec.name)[0] + ".pvr"
             filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath, image_file)
             self.unpack_PVR(filepath)
             filepath = filepath[:-3] + self.base_ext[1:]
         else:
-            filepath = None
-            self.logger.error("Not supported image format")
+            im = Image.open(io.BytesIO(image_file))
+            if self.dal_dec.verbose:
+                self.logger.info("Image header format: "+im.format)
+            filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
+            self.dal_dec.write(filepath, image_file)
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -66,7 +75,9 @@ class initWithMNGData:
             self.unpack_PVR(filepath_alpha)
             filepath_alpha = filepath_alpha[:-3] + self.base_ext[1:]
         else:
-            filepath_alpha = None
+            name = "alpha_" + self.dal_dec.name
+            filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
+            self.dal_dec.write(filepath_alpha, alpha_file)
         im_rgb = Image.open(filepath).convert("RGB")
         im_a = Image.open(filepath_alpha).convert("L")
         im_rgba = im_rgb.copy()
@@ -78,7 +89,10 @@ class initWithMNGData:
 
         buff = buff[alpha_size:]
         if buff != b"":
-            self.logger.error("Alpha file size mismatch")
+            if self.dal_dec.verbose:
+                self.logger.error("Alpha file size mismatch")
+            else:
+                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
 
     def unpack_PVR(self, filepath):
         if self.dal_dec.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
