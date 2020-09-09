@@ -58,15 +58,18 @@ class initWithMNGData:
                 filepath = filepath[:-3] + self.base_ext[1:]
             else:
                 im = Image.open(io.BytesIO(image_file))
+                self.dal_dec.write(filepath, image_file)
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: "+im.format)
-                self.dal_dec.write(filepath, image_file)
-                self.logger.warning(filepath)
-                self.logger.warning("Potentially not supported image format")
+                    self.logger.warning(filepath)
+                    self.logger.warning("Potentially not supported image format")
         except:
-            self.logger.error("An error occured during processing this image file")
-            self.logger.error(filepath)
-            self.logger.error("Send file to the maintainer for debugging")
+            if self.dal_dec.verbose:
+                self.logger.error("An error occured during processing this image file")
+                self.logger.error(filepath)
+                self.logger.error("Send file to the maintainer for debugging")
+            else:
+                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -95,15 +98,20 @@ class initWithMNGData:
             im_rgba.save(filepath)
             os.remove(filepath_alpha)
         except:
-            self.logger.error("Unknown alpha process scheme in files")
-            self.logger.error(filepath)
-            self.logger.error(filepath_alpha)
-            self.logger.error("Send files to the maintainer for debugging")
+            if self.dal_dec.verbose:
+                self.logger.error("Unknown alpha process scheme in files")
+                self.logger.error(filepath)
+                self.logger.error(filepath_alpha)
+                self.logger.error("Send files to the maintainer for debugging")
+            else:
+                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
 
         buff = buff[alpha_size:]
         if buff != b"":
             if self.dal_dec.verbose:
                 self.logger.error("Alpha file size mismatch")
+                self.logger.error(filepath)
+                self.logger.error("Send files to the maintainer for debugging")
             else:
                 print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
 
@@ -127,8 +135,8 @@ class initWithMNGData:
                     self.logger.info("Done. No error found.")
                 else:
                     self.logger.error("There's an error, maybe need to manually unpack")
+                    self.logger.error(filepath)
                     self.logger.error(string)
-                self.logger.info("")
             if not self.dal_dec.keepPVR:
                 os.remove(filepath)
 
@@ -239,7 +247,6 @@ class DateALive_decryption:
                     self.logger.info(debug_dict[retval])
                 else:
                     self.logger.warning(debug_dict[retval])
-                self.logger.info("")
             if retval != -1:
                 if buff[:3] == b"MNG":
                     initWithMNGData(self, buff)
