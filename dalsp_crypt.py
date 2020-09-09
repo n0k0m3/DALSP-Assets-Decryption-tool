@@ -35,31 +35,38 @@ class initWithMNGData:
         image_size = struct.unpack('<I', buff[:4])[0]
         buff = buff[4:]
         image_file = buff[:image_size]
-        if image_file[:4] == b'RIFF':
-            im = Image.open(io.BytesIO(image_file))
-            if self.dal_dec.verbose:
-                self.logger.info("Image header format: "+im.format)
-            data = io.BytesIO()
-            im.save(data, self.base_ext[1:])
-            png_file = data.getvalue()
-            filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
-            if self.dal_dec.verbose:
-                self.logger.info("Convert "+im.format+" to "+self.base_ext[1:].upper())
-            self.dal_dec.write(filepath, png_file)
-        elif image_file[:3] == b'PVR':
-            if self.dal_dec.verbose:
-                self.logger.info("Image header format: PVR")
-            name = os.path.splitext(self.dal_dec.name)[0] + ".pvr"
-            filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
-            self.dal_dec.write(filepath, image_file)
-            self.unpack_PVR(filepath)
-            filepath = filepath[:-3] + self.base_ext[1:]
-        else:
-            im = Image.open(io.BytesIO(image_file))
-            if self.dal_dec.verbose:
-                self.logger.info("Image header format: "+im.format)
-            filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
-            self.dal_dec.write(filepath, image_file)
+        filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
+        try:
+            if image_file[:4] == b'RIFF':
+                im = Image.open(io.BytesIO(image_file))
+                if self.dal_dec.verbose:
+                    self.logger.info("Image header format: "+im.format)
+                data = io.BytesIO()
+                im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+                im.save(data, im_format)
+                png_file = data.getvalue()
+                if self.dal_dec.verbose:
+                    self.logger.info("Convert "+im.format+" to "+self.base_ext[1:].upper())
+                self.dal_dec.write(filepath, png_file)
+            elif image_file[:3] == b'PVR':
+                if self.dal_dec.verbose:
+                    self.logger.info("Image header format: PVR")
+                name = os.path.splitext(self.dal_dec.name)[0] + ".pvr"
+                filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
+                self.dal_dec.write(filepath, image_file)
+                self.unpack_PVR(filepath)
+                filepath = filepath[:-3] + self.base_ext[1:]
+            else:
+                im = Image.open(io.BytesIO(image_file))
+                if self.dal_dec.verbose:
+                    self.logger.info("Image header format: "+im.format)
+                self.dal_dec.write(filepath, image_file)
+                self.logger.warning(filepath)
+                self.logger.warning("Potentially not supported image format")
+        except:
+            self.logger.error("An error occured during processing this image file")
+            self.logger.error(filepath)
+            self.logger.error("Send file to the maintainer for debugging")
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -78,14 +85,20 @@ class initWithMNGData:
             name = "alpha_" + self.dal_dec.name
             filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
-        im_rgb = Image.open(filepath).convert("RGB")
-        im_a = Image.open(filepath_alpha).convert("L")
-        im_rgba = im_rgb.copy()
-        im_rgba.putalpha(im_a)
-        if self.base_ext[1:].lower() == "jpg":
-            im_rgba = im_rgba.convert('RGB')
-        im_rgba.save(filepath)
-        os.remove(filepath_alpha)
+        try:
+            im_rgb = Image.open(filepath).convert("RGB")
+            im_a = Image.open(filepath_alpha).convert("L")
+            im_rgba = im_rgb.copy()
+            im_rgba.putalpha(im_a)
+            if self.base_ext[1:].lower() == "jpg":
+                im_rgba = im_rgba.convert('RGB')
+            im_rgba.save(filepath)
+            os.remove(filepath_alpha)
+        except:
+            self.logger.error("Unknown alpha process scheme in files")
+            self.logger.error(filepath)
+            self.logger.error(filepath_alpha)
+            self.logger.error("Send files to the maintainer for debugging")
 
         buff = buff[alpha_size:]
         if buff != b"":
@@ -107,7 +120,7 @@ class initWithMNGData:
                            "--max-size", "4096"]
                 process = subprocess.Popen(
                     command, stdout=FNULL, stderr=subprocess.PIPE)
-                stdout, stderr = process.communicate()
+                _, stderr = process.communicate()
             if self.dal_dec.verbose:
                 string = stderr.decode("utf-8")
                 if string == "":
@@ -235,7 +248,7 @@ class DateALive_decryption:
                     self.write(filepath, buff)
 
     def decrypt_folder(self):
-        for root, dirs, files in os.walk(self.input_path):
+        for root, _, files in os.walk(self.input_path):
             for self.name in files:
                 self.relpath = os.path.relpath(root, self.input_path)
                 self.path = os.path.join(root, self.name)
