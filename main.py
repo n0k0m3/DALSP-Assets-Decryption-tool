@@ -2,7 +2,7 @@ import os
 import sys
 from optparse import OptionParser
 
-import dalsp_crypt
+import dalsp_decrypt
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
         print("No input or output path specified. Run \"python main.py -h\" for more details")
         print()
         return
-    decrypt = dalsp_crypt.DateALive_decryption(options)
+    decrypt = dalsp_decrypt.DateALive_decryption(options)
     if not options.file_mode:
         decrypt.decrypt_folder()
     else:
