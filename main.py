@@ -10,12 +10,9 @@ def main():
     print("Decrypt all assets in source directory and save in destination directory\n")
     parser = OptionParser()
     parser.add_option("-i", "--input", dest="input_path",
-                      help="Encrypted Data Source (folder/file; if file, use -f)", metavar="\"INPUT\"")
+                      help="Encrypted Data Source (folder/file)", metavar="\"INPUT\"")
     parser.add_option("-o", "--output", dest="output_path",
                       help="Decrypted Data Destination (MUST BE A FOLDER)", metavar="\"OUTPUT\"")
-    parser.add_option("-f", "--file", dest="file_mode",
-                      action="store_true", default=False,
-                      help="Single file decryption mode")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="Print debug messages to debug.log")
@@ -37,10 +34,10 @@ def main():
         print()
         return
     decrypt = dalsp_decrypt.DateALive_decryption(options)
-    if not options.file_mode:
-        decrypt.decrypt_folder()
-    else:
+    if os.path.isfile(options.input_path):
         decrypt.decrypt_single_file()
+    else:
+        decrypt.decrypt_folder()
     plistout = os.path.join(options.output_path, "info.plist")
     if os.path.exists(plistout):
         os.remove(plistout)

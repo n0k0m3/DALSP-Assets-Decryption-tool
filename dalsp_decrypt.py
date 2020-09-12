@@ -8,18 +8,6 @@ import struct
 import logging
 import sys
 
-# logger to debug.log
-FORMAT = "%(name)-25s: %(levelname)-8s %(message)s"
-logging.basicConfig(filename='debug.log', filemode='w', format=FORMAT)
-
-# logger to stdout
-console = logging.StreamHandler(sys.stdout)
-console.setLevel(logging.INFO)
-formatter = logging.Formatter(FORMAT)
-console.setFormatter(formatter)
-logging.getLogger().addHandler(console)
-
-
 class initWithMNGData:
     def __init__(self, dal_dec, buff):
         self.dal_dec = dal_dec
@@ -61,8 +49,9 @@ class initWithMNGData:
                 self.dal_dec.write(filepath, image_file)
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: "+im.format)
-                    self.logger.warning(filepath)
-                    self.logger.warning("Potentially not supported image format")
+                    if im.format not in ["JPEG"]:
+                        self.logger.warning(filepath)
+                        self.logger.warning("Potentially not supported image format")
         except:
             if self.dal_dec.verbose:
                 self.logger.error("An error occured during processing this image file")
@@ -150,6 +139,16 @@ class DateALive_decryption:
         self.unpackPVR = options.unpackPVR
         self.verbose = options.verbose
         if self.verbose:
+            # logger to debug.log
+            FORMAT = "%(name)-25s: %(levelname)-8s %(message)s"
+            logging.basicConfig(filename='debug.log', filemode='w', format=FORMAT)
+
+            # logger to stdout
+            console = logging.StreamHandler(sys.stdout)
+            console.setLevel(logging.INFO)
+            formatter = logging.Formatter(FORMAT)
+            console.setFormatter(formatter)
+            logging.getLogger().addHandler(console)
             self.logger = logging.getLogger('DateALive_decryption')
             self.logger.setLevel(logging.INFO)
 
@@ -229,7 +228,6 @@ class DateALive_decryption:
         if not self.overwrite:
             if os.path.isfile(file_exist):
                 if self.verbose:
-                    print(self.verbose)
                     self.logger.warning(self.name + " already exists at destination, skipping...")
                 return
         with open(self.path, "rb") as file:
