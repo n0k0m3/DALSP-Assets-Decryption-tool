@@ -8,6 +8,7 @@ import struct
 import logging
 import sys
 
+
 class initWithMNGData:
     def __init__(self, dal_dec, buff):
         self.dal_dec = dal_dec
@@ -28,13 +29,13 @@ class initWithMNGData:
             if image_file[:4] == b'RIFF':
                 im = Image.open(io.BytesIO(image_file))
                 if self.dal_dec.verbose:
-                    self.logger.info("Image header format: "+im.format)
+                    self.logger.info("Image header format: " + im.format)
                 data = io.BytesIO()
                 im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
                 im.save(data, im_format)
                 png_file = data.getvalue()
                 if self.dal_dec.verbose:
-                    self.logger.info("Convert "+im.format+" to "+self.base_ext[1:].upper())
+                    self.logger.info("Convert " + im.format + " to " + self.base_ext[1:].upper())
                 self.dal_dec.write(filepath, png_file)
             elif image_file[:3] == b'PVR':
                 if self.dal_dec.verbose:
@@ -48,7 +49,7 @@ class initWithMNGData:
                 im = Image.open(io.BytesIO(image_file))
                 self.dal_dec.write(filepath, image_file)
                 if self.dal_dec.verbose:
-                    self.logger.info("Image header format: "+im.format)
+                    self.logger.info("Image header format: " + im.format)
                     if im.format not in ["JPEG"]:
                         self.logger.warning(filepath)
                         self.logger.warning("Potentially not supported image format")
@@ -58,7 +59,7 @@ class initWithMNGData:
                 self.logger.error(filepath)
                 self.logger.error("Send file to the maintainer for debugging")
             else:
-                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -93,7 +94,7 @@ class initWithMNGData:
                 self.logger.error(filepath_alpha)
                 self.logger.error("Send files to the maintainer for debugging")
             else:
-                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
 
         buff = buff[alpha_size:]
         if buff != b"":
@@ -102,7 +103,7 @@ class initWithMNGData:
                 self.logger.error(filepath)
                 self.logger.error("Send files to the maintainer for debugging")
             else:
-                print("An error occured in file",filepath,". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
 
     def unpack_PVR(self, filepath):
         if self.dal_dec.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
@@ -141,7 +142,7 @@ class DateALive_decryption:
         if self.verbose:
             # logger to debug.log
             FORMAT = "%(name)-25s: %(levelname)-8s %(message)s"
-            logging.basicConfig(filename='debug.log', filemode='w', format=FORMAT)
+            logging.basicConfig(filename='../debug.log', filemode='w', format=FORMAT)
 
             # logger to stdout
             console = logging.StreamHandler(sys.stdout)
@@ -223,7 +224,7 @@ class DateALive_decryption:
             os.makedirs(folder)
         open(path, 'wb').write(content)
 
-    def decrypt_file(self):
+    def crypt_file(self):
         file_exist = os.path.join(self.output_path, self.relpath, self.name)
         if not self.overwrite:
             if os.path.isfile(file_exist):
@@ -252,24 +253,24 @@ class DateALive_decryption:
                     filepath = os.path.join(self.output_path, self.relpath, self.name)
                     self.write(filepath, buff)
 
-    def decrypt_folder(self):
+    def crypt_folder(self):
         for root, _, files in os.walk(self.input_path):
             for self.name in files:
                 self.relpath = os.path.relpath(root, self.input_path)
                 self.path = os.path.join(root, self.name)
-                self.decrypt_file()
+                self.crypt_file()
 
-    def decrypt_single_file(self):
+    def crypt_single_file(self):
         self.relpath = ""
         self.name = os.path.basename(self.input_path)
         self.path = self.input_path
-        self.decrypt_file()
+        self.crypt_file()
 
 
 if __name__ == "__main__":
     class options:
         input_path = 'tmp/cap2.mp4'
-        output_path = 'tmp_dec/'
+        output_path = '../tmp_dec/'
         file_mode = True
         verbose = True
         unpackPVR = False
@@ -278,4 +279,4 @@ if __name__ == "__main__":
 
 
     decrypt = DateALive_decryption(options)
-    decrypt.decrypt_single_file()
+    decrypt.crypt_single_file()

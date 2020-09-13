@@ -1,8 +1,8 @@
 import os
-import sys
 from optparse import OptionParser
 
-import dalsp_decrypt
+from dalsp_crypt import dalsp_decrypt
+from dalsp_crypt import dalsp_encrypt
 
 
 def main():
@@ -25,6 +25,11 @@ def main():
     parser.add_option("-w", "--overwrite",
                       action="store_true", dest="overwrite", default=False,
                       help="Overwrite assets even if decrypted assets exist at destination")
+    parser.add_option("-e", "--encryption", action="store_true", dest="encryption", default=False,
+                      help="Enable encryption mode")
+    parser.add_option("-em", "--mode", dest="encrypt_mode",
+                      help="Encryption mode (ZIP,LZ4,PCM)", metavar="\"MODE\"")
+
 
     (options, args) = parser.parse_args()
 
@@ -33,14 +38,21 @@ def main():
         print("No input or output path specified. Run \"python main.py -h\" for more details")
         print()
         return
-    decrypt = dalsp_decrypt.DateALive_decryption(options)
-    if os.path.isfile(options.input_path):
-        decrypt.decrypt_single_file()
+    if not options.encryption:
+        decrypt = dalsp_decrypt.DateALive_decryption(options)
+        if os.path.isfile(options.input_path):
+            decrypt.crypt_single_file()
+        else:
+            decrypt.crypt_folder()
+        plistout = os.path.join(options.output_path, "info.plist")
+        if os.path.exists(plistout):
+            os.remove(plistout)
     else:
-        decrypt.decrypt_folder()
-    plistout = os.path.join(options.output_path, "info.plist")
-    if os.path.exists(plistout):
-        os.remove(plistout)
+        encrypt = dalsp_encrypt.DateALive_encryption(options)
+        if os.path.isfile(options.input_path):
+            encrypt.crypt_single_file()
+        else:
+            encrypt.crypt_folder()
 
 
 if __name__ == "__main__":
