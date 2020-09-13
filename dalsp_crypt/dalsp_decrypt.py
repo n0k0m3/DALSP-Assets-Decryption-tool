@@ -1,12 +1,13 @@
 import gzip
 import io
-import lz4.block
-import os
-import subprocess
-from PIL import Image
-import struct
 import logging
+import os
+import struct
+import subprocess
 import sys
+
+import lz4.block
+from PIL import Image
 
 
 class initWithMNGData:
@@ -24,24 +25,28 @@ class initWithMNGData:
         image_size = struct.unpack('<I', buff[:4])[0]
         buff = buff[4:]
         image_file = buff[:image_size]
-        filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, self.dal_dec.name)
+        filepath = os.path.join(self.dal_dec.output_path,
+                                self.dal_dec.relpath, self.dal_dec.name)
         try:
             if image_file[:4] == b'RIFF':
                 im = Image.open(io.BytesIO(image_file))
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: " + im.format)
                 data = io.BytesIO()
-                im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+                im_format = 'JPEG' if self.base_ext[1:].lower(
+                ) == 'jpg' else self.base_ext[1:].upper()
                 im.save(data, im_format)
                 png_file = data.getvalue()
                 if self.dal_dec.verbose:
-                    self.logger.info("Convert " + im.format + " to " + self.base_ext[1:].upper())
+                    self.logger.info("Convert " + im.format +
+                                     " to " + self.base_ext[1:].upper())
                 self.dal_dec.write(filepath, png_file)
             elif image_file[:3] == b'PVR':
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: PVR")
                 name = os.path.splitext(self.dal_dec.name)[0] + ".pvr"
-                filepath = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
+                filepath = os.path.join(
+                    self.dal_dec.output_path, self.dal_dec.relpath, name)
                 self.dal_dec.write(filepath, image_file)
                 self.unpack_PVR(filepath)
                 filepath = filepath[:-3] + self.base_ext[1:]
@@ -52,14 +57,17 @@ class initWithMNGData:
                     self.logger.info("Image header format: " + im.format)
                     if im.format not in ["JPEG"]:
                         self.logger.warning(filepath)
-                        self.logger.warning("Potentially not supported image format")
+                        self.logger.warning(
+                            "Potentially not supported image format")
         except:
             if self.dal_dec.verbose:
-                self.logger.error("An error occured during processing this image file")
+                self.logger.error(
+                    "An error occured during processing this image file")
                 self.logger.error(filepath)
                 self.logger.error("Send file to the maintainer for debugging")
             else:
-                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath,
+                      ". Please enable -v or --verbose to debug")
         buff = buff[image_size:]
         if buff[:4] != b"":
             self.restore_alpha(buff, filepath)
@@ -70,13 +78,15 @@ class initWithMNGData:
         alpha_file = buff[:alpha_size]
         if alpha_file[:3] == b'PVR':
             name = "alpha_" + os.path.splitext(self.dal_dec.name)[0] + ".pvr"
-            filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
+            filepath_alpha = os.path.join(
+                self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
             self.unpack_PVR(filepath_alpha)
             filepath_alpha = filepath_alpha[:-3] + self.base_ext[1:]
         else:
             name = "alpha_" + self.dal_dec.name
-            filepath_alpha = os.path.join(self.dal_dec.output_path, self.dal_dec.relpath, name)
+            filepath_alpha = os.path.join(
+                self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
         try:
             im_rgb = Image.open(filepath).convert("RGB")
@@ -94,7 +104,8 @@ class initWithMNGData:
                 self.logger.error(filepath_alpha)
                 self.logger.error("Send files to the maintainer for debugging")
             else:
-                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath,
+                      ". Please enable -v or --verbose to debug")
 
         buff = buff[alpha_size:]
         if buff != b"":
@@ -103,7 +114,8 @@ class initWithMNGData:
                 self.logger.error(filepath)
                 self.logger.error("Send files to the maintainer for debugging")
             else:
-                print("An error occured in file", filepath, ". Please enable -v or --verbose to debug")
+                print("An error occured in file", filepath,
+                      ". Please enable -v or --verbose to debug")
 
     def unpack_PVR(self, filepath):
         if self.dal_dec.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
@@ -124,7 +136,8 @@ class initWithMNGData:
                 if string == "":
                     self.logger.info("Done. No error found.")
                 else:
-                    self.logger.error("There's an error, maybe need to manually unpack")
+                    self.logger.error(
+                        "There's an error, maybe need to manually unpack")
                     self.logger.error(filepath)
                     self.logger.error(string)
             if not self.dal_dec.keepPVR:
@@ -142,7 +155,8 @@ class DateALive_decryption:
         if self.verbose:
             # logger to debug.log
             FORMAT = "%(name)-25s: %(levelname)-8s %(message)s"
-            logging.basicConfig(filename='../debug.log', filemode='w', format=FORMAT)
+            logging.basicConfig(filename='../debug.log',
+                                filemode='w', format=FORMAT)
 
             # logger to stdout
             console = logging.StreamHandler(sys.stdout)
@@ -229,12 +243,14 @@ class DateALive_decryption:
         if not self.overwrite:
             if os.path.isfile(file_exist):
                 if self.verbose:
-                    self.logger.warning(self.name + " already exists at destination, skipping...")
+                    self.logger.warning(
+                        self.name + " already exists at destination, skipping...")
                 return
         with open(self.path, "rb") as file:
             self.data = file.read()
             if self.verbose:
-                self.logger.info("Reading: " + os.path.join(self.relpath, self.name))
+                self.logger.info(
+                    "Reading: " + os.path.join(self.relpath, self.name))
             buff, retval = self.decrypt_assets()
             if self.verbose:
                 debug_dict = {
@@ -250,7 +266,8 @@ class DateALive_decryption:
                 if buff[:3] == b"MNG":
                     initWithMNGData(self, buff)
                 else:
-                    filepath = os.path.join(self.output_path, self.relpath, self.name)
+                    filepath = os.path.join(
+                        self.output_path, self.relpath, self.name)
                     self.write(filepath, buff)
 
     def crypt_folder(self):
