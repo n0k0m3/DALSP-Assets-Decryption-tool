@@ -3,6 +3,7 @@ import io
 import logging
 import os
 from random import randint
+import zlib
 
 import lz4.block
 
@@ -39,13 +40,10 @@ class DateALive_encryption(DateALive_decryption):
 
     @staticmethod
     def encryptZIP(data):
-        data_holder = io.BytesIO()
-        zf = gzip.GzipFile(fileobj=data_holder, mode="wb", mtime=0)
-        zf.write(data)
-        zf.flush()
-        zf.close()
-        data = bytearray(data_holder.getvalue())
+        gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
+        data = gzip_compress.compress(data) + gzip_compress.flush()
         data = bytearray([0xf8]) + data
+        data[10] = 0x03  # Force OS = Unix
         data_size = len(data)
         var_1 = 0x14
         if (data_size - 3) < int(str(0x15)):

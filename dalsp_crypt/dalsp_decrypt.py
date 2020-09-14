@@ -5,6 +5,7 @@ import os
 import struct
 import subprocess
 import sys
+import zlib
 
 import lz4.block
 from PIL import Image
@@ -186,7 +187,7 @@ class DateALive_decryption:
                 i = i + 1
                 if not (i < n):
                     break
-            data = gzip.decompress(data[1:])
+            data = zlib.decompress(data[1:], zlib.MAX_WBITS | 32)
         return data, 1
 
     @staticmethod
@@ -293,7 +294,6 @@ if __name__ == "__main__":
         unpackPVR = False
         keepPVR = False
         overwrite = True
-
 
     decrypt = DateALive_decryption(options)
     decrypt.crypt_single_file()
