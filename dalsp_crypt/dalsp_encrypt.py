@@ -1,9 +1,7 @@
-import gzip
-import io
 import logging
 import os
-from random import randint
 import zlib
+from random import randint
 
 import lz4.block
 

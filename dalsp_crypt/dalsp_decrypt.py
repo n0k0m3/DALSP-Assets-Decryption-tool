@@ -1,4 +1,3 @@
-import gzip
 import io
 import logging
 import os
@@ -294,6 +293,7 @@ if __name__ == "__main__":
         unpackPVR = False
         keepPVR = False
         overwrite = True
+
 
     decrypt = DateALive_decryption(options)
     decrypt.crypt_single_file()
