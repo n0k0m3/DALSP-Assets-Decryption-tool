@@ -6,6 +6,7 @@ import subprocess
 import sys
 import zlib
 
+from tex2img import basisu_decompress 
 import lz4.block
 from PIL import Image
 
@@ -48,7 +49,7 @@ class initWithMNGData:
                 filepath = os.path.join(
                     self.dal_dec.output_path, self.dal_dec.relpath, name)
                 self.dal_dec.write(filepath, image_file)
-                self.unpack_PVR(filepath)
+                self.unpack_PVR(image_file)
                 filepath = filepath[:-3] + self.base_ext[1:]
             else:
                 im = Image.open(io.BytesIO(image_file))
@@ -81,7 +82,7 @@ class initWithMNGData:
             filepath_alpha = os.path.join(
                 self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
-            self.unpack_PVR(filepath_alpha)
+            self.unpack_PVR(alpha_file)
             filepath_alpha = filepath_alpha[:-3] + self.base_ext[1:]
         else:
             name = "alpha_" + self.dal_dec.name
