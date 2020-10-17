@@ -88,24 +88,26 @@ class initWithMNGData:
             filepath_alpha = os.path.join(
                 self.dal_dec.output_path, self.dal_dec.relpath, name)
             self.dal_dec.write(filepath_alpha, alpha_file)
-        try:
-            im_rgb = Image.open(filepath).convert("RGB")
-            im_a = Image.open(filepath_alpha).convert("L")
-            im_rgba = im_rgb.copy()
-            im_rgba.putalpha(im_a)
-            if self.base_ext[1:].lower() == "jpg":
-                im_rgba = im_rgba.convert('RGB')
-            im_rgba.save(filepath)
-            os.remove(filepath_alpha)
-        except:
-            if self.dal_dec.verbose:
-                self.logger.error("Unknown alpha process scheme in files")
-                self.logger.error(filepath)
-                self.logger.error(filepath_alpha)
-                self.logger.error("Send files to the maintainer for debugging")
-            else:
-                print("An error occured in file", filepath,
-                      ". Please enable -v or --verbose to debug")
+        
+        if alpha_file[:3] != b'PVR' or self.dal_dec.unpackPVR:
+            try:
+                im_rgb = Image.open(filepath).convert("RGB")
+                im_a = Image.open(filepath_alpha).convert("L")
+                im_rgba = im_rgb.copy()
+                im_rgba.putalpha(im_a)
+                if self.base_ext[1:].lower() == "jpg":
+                    im_rgba = im_rgba.convert('RGB')
+                im_rgba.save(filepath)
+                os.remove(filepath_alpha)
+            except:
+                if self.dal_dec.verbose:
+                    self.logger.error("Unknown alpha process scheme in files")
+                    self.logger.error(filepath)
+                    self.logger.error(filepath_alpha)
+                    self.logger.error("Send files to the maintainer for debugging")
+                else:
+                    print("An error occured in file", filepath,
+                        ". Please enable -v or --verbose to debug")
 
         buff = buff[alpha_size:]
         if buff != b"":
