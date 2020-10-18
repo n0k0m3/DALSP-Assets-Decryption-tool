@@ -2,13 +2,12 @@ import io
 import logging
 import os
 import struct
-import subprocess
 import sys
 import zlib
 
-from tex2img import basisu_decompress 
 import lz4.block
 from PIL import Image
+from tex2img import basisu_decompress
 
 
 class initWithMNGData:
@@ -22,12 +21,48 @@ class initWithMNGData:
         self.split_PVR()
 
     def split_PVR(self):
+        filepath = os.path.join(self.dal_dec.output_path,
+                                self.dal_dec.relpath, self.dal_dec.name)
         buff = self.buff[3:]
         image_size = struct.unpack('<I', buff[:4])[0]
         buff = buff[4:]
-        image_file = buff[:image_size]
-        filepath = os.path.join(self.dal_dec.output_path,
-                                self.dal_dec.relpath, self.dal_dec.name)
+        image_file = self.unpack_PVR(buff[:image_size], "")
+        buff = buff[image_size:]
+        if buff[:4] != b"":  # Restoring Alpha Channel
+            alpha_size = struct.unpack('<I', buff[:4])[0]
+            buff = buff[4:]
+            alpha_file = self.unpack_PVR(buff[:alpha_size], "alpha_")
+            try:
+                im_rgb = Image.open(io.BytesIO(image_file)).convert("RGB")
+                im_a = Image.open(io.BytesIO(alpha_file)).convert("L")
+                im_rgba = im_rgb.copy()
+                im_rgba.putalpha(im_a)
+                if self.base_ext[1:].lower() == "jpg":
+                    im_rgba = im_rgba.convert('RGB')
+                with io.BytesIO() as output:
+                    im_rgba.save(output, format=self.base_ext.upper()[1:])
+                    self.dal_dec.write(filepath, output.getvalue())
+            except:
+                if self.dal_dec.verbose:
+                    self.logger.error("Unknown alpha process scheme in files")
+                    self.logger.error(filepath)
+                    self.logger.error("Send files to the maintainer for debugging")
+                else:
+                    print("An error occured in file", filepath,
+                          ". Please enable -v or --verbose to debug")
+            buff = buff[alpha_size:]
+            if buff != b"":
+                if self.dal_dec.verbose:
+                    self.logger.error("Alpha file size mismatch")
+                    self.logger.error(filepath)
+                    self.logger.error("Send files to the maintainer for debugging")
+                else:
+                    print("An error occured in file", filepath,
+                          ". Please enable -v or --verbose to debug")
+        else:
+            self.save_image(image_file, filepath)
+
+    def save_image(self, image_file, filepath):
         try:
             if image_file[:4] == b'RIFF':
                 im = Image.open(io.BytesIO(image_file))
@@ -42,15 +77,6 @@ class initWithMNGData:
                     self.logger.info("Convert " + im.format +
                                      " to " + self.base_ext[1:].upper())
                 self.dal_dec.write(filepath, png_file)
-            elif image_file[:3] == b'PVR':
-                if self.dal_dec.verbose:
-                    self.logger.info("Image header format: PVR")
-                name = os.path.splitext(self.dal_dec.name)[0] + ".pvr"
-                filepath = os.path.join(
-                    self.dal_dec.output_path, self.dal_dec.relpath, name)
-                self.dal_dec.write(filepath, image_file)
-                self.unpack_PVR(image_file)
-                filepath = filepath[:-3] + self.base_ext[1:]
             else:
                 im = Image.open(io.BytesIO(image_file))
                 self.dal_dec.write(filepath, image_file)
@@ -69,82 +95,29 @@ class initWithMNGData:
             else:
                 print("An error occured in file", filepath,
                       ". Please enable -v or --verbose to debug")
-        buff = buff[image_size:]
-        if buff[:4] != b"":
-            self.restore_alpha(buff, filepath)
 
-    def restore_alpha(self, buff, filepath):
-        alpha_size = struct.unpack('<I', buff[:4])[0]
-        buff = buff[4:]
-        alpha_file = buff[:alpha_size]
-        if alpha_file[:3] == b'PVR':
-            name = "alpha_" + os.path.splitext(self.dal_dec.name)[0] + ".pvr"
-            filepath_alpha = os.path.join(
-                self.dal_dec.output_path, self.dal_dec.relpath, name)
-            self.dal_dec.write(filepath_alpha, alpha_file)
-            self.unpack_PVR(alpha_file)
-            filepath_alpha = filepath_alpha[:-3] + self.base_ext[1:]
-        else:
-            name = "alpha_" + self.dal_dec.name
-            filepath_alpha = os.path.join(
-                self.dal_dec.output_path, self.dal_dec.relpath, name)
-            self.dal_dec.write(filepath_alpha, alpha_file)
-        
-        if alpha_file[:3] != b'PVR' or self.dal_dec.unpackPVR:
-            try:
-                im_rgb = Image.open(filepath).convert("RGB")
-                im_a = Image.open(filepath_alpha).convert("L")
-                im_rgba = im_rgb.copy()
-                im_rgba.putalpha(im_a)
-                if self.base_ext[1:].lower() == "jpg":
-                    im_rgba = im_rgba.convert('RGB')
-                im_rgba.save(filepath)
-                os.remove(filepath_alpha)
-            except:
-                if self.dal_dec.verbose:
-                    self.logger.error("Unknown alpha process scheme in files")
-                    self.logger.error(filepath)
-                    self.logger.error(filepath_alpha)
-                    self.logger.error("Send files to the maintainer for debugging")
-                else:
-                    print("An error occured in file", filepath,
-                        ". Please enable -v or --verbose to debug")
-
-        buff = buff[alpha_size:]
-        if buff != b"":
-            if self.dal_dec.verbose:
-                self.logger.error("Alpha file size mismatch")
-                self.logger.error(filepath)
-                self.logger.error("Send files to the maintainer for debugging")
-            else:
-                print("An error occured in file", filepath,
-                      ". Please enable -v or --verbose to debug")
-
-    def unpack_PVR(self, filepath):
-        if self.dal_dec.unpackPVR and os.path.splitext(filepath)[1] == ".pvr":
-            filename = os.path.basename(filepath)
-            fileout = os.path.splitext(filepath)[0] + self.base_ext
-            plistout = os.path.join(self.dal_dec.output_path, "info.plist")
-            with open(os.devnull, 'w') as FNULL:
-                if self.dal_dec.verbose:
-                    self.logger.info("Unpacking PVR: " + filename)
-                command = ["TexturePacker", filepath,
-                           "--sheet", fileout, "--data", plistout,
-                           "--max-size", "4096"]
-                process = subprocess.Popen(
-                    command, stdout=FNULL, stderr=subprocess.PIPE)
-                _, stderr = process.communicate()
-            if self.dal_dec.verbose:
-                string = stderr.decode("utf-8")
-                if string == "":
-                    self.logger.info("Done. No error found.")
-                else:
-                    self.logger.error(
-                        "There's an error, maybe need to manually unpack")
-                    self.logger.error(filepath)
-                    self.logger.error(string)
-            if not self.dal_dec.keepPVR:
-                os.remove(filepath)
+    def unpack_PVR(self, buff, name):
+        if buff[:3] != b"PVR":
+            return buff
+        if self.dal_dec.keepPVR:
+            base_name = os.path.splitext(self.dal_dec.name)[0]
+            filepath = os.path.join(self.dal_dec.output_path,
+                                    self.dal_dec.relpath, name + base_name + ".pvr")
+            self.dal_dec.write(filepath, buff)
+        pixel_format = struct.unpack('<I', buff[4 * 2:4 * 2 + 4])[0]
+        if pixel_format == 6:
+            mode = 0
+        elif pixel_format == 2:
+            mode = 11
+        height = struct.unpack('<I', buff[4 * 6:4 * 6 + 4])[0]
+        width = struct.unpack('<I', buff[4 * 7:4 * 7 + 4])[0]
+        img = buff[67:]
+        rgba_data = basisu_decompress(img, width, height, mode)
+        im = Image.frombytes("RGBA", (width, height), rgba_data)
+        with io.BytesIO() as result:
+            im.save(result, format=self.base_ext.upper()[1:])
+            result = result.getvalue()
+        return result
 
 
 class DateALive_decryption:
@@ -153,7 +126,6 @@ class DateALive_decryption:
         self.keepPVR = options.keepPVR
         self.output_path = options.output_path
         self.overwrite = options.overwrite
-        self.unpackPVR = options.unpackPVR
         self.verbose = options.verbose
         if self.verbose:
             # logger to debug.log
@@ -293,7 +265,6 @@ if __name__ == "__main__":
         output_path = '../tmp_dec/'
         file_mode = True
         verbose = True
-        unpackPVR = False
         keepPVR = False
         overwrite = True
 
