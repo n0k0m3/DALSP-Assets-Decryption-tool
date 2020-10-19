@@ -37,10 +37,10 @@ class initWithMNGData:
                 im_a = Image.open(io.BytesIO(alpha_file)).convert("L")
                 im_rgba = im_rgb.copy()
                 im_rgba.putalpha(im_a)
-                if self.base_ext[1:].lower() == "jpg":
-                    im_rgba = im_rgba.convert('RGB')
                 with io.BytesIO() as output:
-                    im_rgba.save(output, format=self.base_ext.upper()[1:])
+                    im_rgba = im_rgba.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im_rgba
+                    im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+                    im_rgba.save(output, format=im_format)
                     self.dal_dec.write(filepath, output.getvalue())
             except:
                 if self.dal_dec.verbose:
@@ -69,8 +69,8 @@ class initWithMNGData:
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: " + im.format)
                 data = io.BytesIO()
-                im_format = 'JPEG' if self.base_ext[1:].lower(
-                ) == 'jpg' else self.base_ext[1:].upper()
+                im = im.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im
+                im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
                 im.save(data, im_format)
                 png_file = data.getvalue()
                 if self.dal_dec.verbose:
@@ -115,7 +115,9 @@ class initWithMNGData:
         rgba_data = basisu_decompress(img, width, height, mode)
         im = Image.frombytes("RGBA", (width, height), rgba_data)
         with io.BytesIO() as result:
-            im.save(result, format=self.base_ext.upper()[1:])
+            im = im.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im
+            im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+            im.save(result, format=im_format)
             result = result.getvalue()
         return result
 
@@ -139,6 +141,11 @@ class DateALive_decryption:
             formatter = logging.Formatter(FORMAT)
             console.setFormatter(formatter)
             logging.getLogger().addHandler(console)
+            output_file_handler = logging.FileHandler("debug.log")
+            output_file_handler.setLevel(logging.INFO)
+            formatter = logging.Formatter(FORMAT)
+            output_file_handler.setFormatter(formatter)
+            logging.getLogger().addHandler(output_file_handler)
             self.logger = logging.getLogger('DateALive_decryption')
             self.logger.setLevel(logging.INFO)
 
