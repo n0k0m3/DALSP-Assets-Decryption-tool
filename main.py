@@ -19,9 +19,6 @@ def main():
                       help="Print debugging messages to debug.log")
     decryption = OptionGroup(parser, "Decryption Options",
                              "Some useful decryption options.")
-    decryption.add_option("-u", "--unpack",
-                          action="store_true", dest="unpackPVR", default=False,
-                          help="Unpack PVR assets (Recommended)")
     decryption.add_option("-k", "--keepPVR",
                           action="store_true", dest="keepPVR", default=False,
                           help="Keep PVR assets after unpack (Recommended for debugging)")
@@ -52,9 +49,6 @@ def main():
             decrypt.crypt_single_file()
         else:
             decrypt.crypt_folder()
-        plistout = os.path.join(options.output_path, "info.plist")
-        if os.path.exists(plistout):
-            os.remove(plistout)
     else:
         if options.encrypt_mode is not None:
             encrypt = dalsp_encrypt.DateALive_encryption(options)

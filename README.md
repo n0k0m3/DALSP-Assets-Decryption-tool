@@ -4,20 +4,15 @@ Decrypt assets for the game
 
 ## Requirements
 
-- [Python 3+](https://www.python.org/downloads/)
-- pip modules `lz4-python` and `Pillow`: `pip install -r requirements.txt`
-- [TexturePacker](https://www.codeandweb.com/texturepacker/download) (unpack PVR files) [added to PATH](https://github.com/n0k0m3/DALSP-Assets-Decryption-tool/wiki/Add-TexturePacker-to-PATH)
+- [Python 3.6 or 3.7](https://www.python.org/downloads/) (other versions are untested but minimum is Python 3+)
+- pip modules `lz4-python`, `Pillow`, `tex2img`: `pip install -r requirements.txt`
 
 ## Notes
 
-- This tool can decrypt textassets (lua,json,etc.), audio/video assets (mp3,mp4), some PNGs assets (Live2D textures)
-- Other PNGs can be decrypted to PVR (will need to unpack with `TexturePacker`)
-- <details>
-  <summary>About TexturePacker Trial</summary>
-
-  If you cannot afford TexturePacker, you can search Google for version 4.9.0 or older, these versions don't block Pro features after trial expired (you may find cracks of these versions as well).
-
-</details>
+This tool can decrypt/unpack following assets automatically:
+- Text assets (lua,json,etc.)
+- Audio/video assets (mp3,mp4)
+- PNGs assets (Live2D textures,Spine sprites, PVR textures)
 
 ## Usage
 
@@ -41,7 +36,6 @@ Options:
   Decryption Options:
     Some useful decryption options.
 
-    -u, --unpack        Unpack PVR assets (Recommended)
     -k, --keepPVR       Keep PVR assets after unpack (Recommended for
                         debugging)
     -w, --overwrite     Overwrite assets even if decrypted assets exist at
@@ -63,16 +57,16 @@ Options:
 Directory decryption mode, overwrite, unpack PVR but not keeping file, log to debug.log
 
 ```
-python main.py -i example -o example_out -w -u -v
+python main.py -i example -o example_out -w -v
 ```
 
 Single file decryption mode, overwrite, unpack PVR and keeping file
 
 ```
-python main.py -i example/icon-gift/531009.png -o example/icon-gift -w -u -k
+python main.py -i example/icon-gift/531009.png -o example/icon-gift -w -k
 ```
 
-Single file encryption, PCM mode with 0x4C as XOR variable (not specified means random)
+Single file encryption, PCM mode with 0x4C as XOR variable (not specified means random) (Not in development)
 
 ```
 python main.py -i python main.py -i example_dec/video/cap2.mp4 -o example_dec_enc -v -e -m pcm,4c
