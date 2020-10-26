@@ -11,9 +11,9 @@ def main():
     usage = "usage: %prog -i INPUT -o OUTPUT [options]"
     parser = OptionParser(usage=usage)
     parser.add_option("-i", "--input", dest="input_path",
-                      help="Encrypted Data Source (folder/file)", metavar="\"INPUT\"")
+                      help="Encrypted Data Source (folder/file)", metavar="\"INPUT\"", required=True)
     parser.add_option("-o", "--output", dest="output_path",
-                      help="Decrypted Data Destination (MUST BE A FOLDER)", metavar="\"OUTPUT\"")
+                      help="Decrypted Data Destination (MUST BE A FOLDER)", metavar="\"OUTPUT\"", required=True)
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="Print debugging messages to debug.log")
