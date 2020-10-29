@@ -33,7 +33,7 @@ def main():
     encryption.add_argument("-e", "--encryption", action="store_true", dest="encryption", default=False,
                             help="Enable encryption mode")
     encryption.add_argument("-m", "--mode", dest="encrypt_mode",
-                            help="Encryption mode (ZIP,LZ4,PCM)", metavar="MODE", choices=["ZIP", "LZ4", "PCM"])
+                            help="Encryption mode (ZIP,LZ4,PCM)", metavar="MODE")
 
     options = parser.parse_args()
 
