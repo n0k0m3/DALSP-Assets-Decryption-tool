@@ -21,35 +21,34 @@ This tool can decrypt/unpack following assets automatically:
 
 Date A Live: Spirit Pledge Assets Decryption tool
 
+usage: main.py [-h] [-v] [-k] [-w] [-e] [-m MODE] INPUT OUTPUT
+
 Decrypt all assets in source directory and save in destination directory
 
-Usage: main.py -i INPUT -o OUTPUT [options]
+positional arguments:
+  INPUT                 Encrypted Data Source (folder/file)
+  OUTPUT                Decrypted Data Destination (MUST BE A FOLDER)
 
-Options:
+optional arguments:
   -h, --help            show this help message and exit
-  -i "INPUT", --input="INPUT"
-                        Encrypted Data Source (folder/file)
-  -o "OUTPUT", --output="OUTPUT"
-                        Decrypted Data Destination (MUST BE A FOLDER)
   -v, --verbose         Print debugging messages to debug.log
 
-  Decryption Options:
-    Some useful decryption options.
+decryption options:
+  Some useful decryption options.
 
-    -k, --keepPVR       Keep PVR assets after unpack (Recommended for
+  -k, --keepPVR         Keep PVR assets after unpack (Recommended for
                         debugging)
-    -w, --overwrite     Overwrite assets even if decrypted assets exist at
+  -w, --overwrite       Overwrite assets even if decrypted assets exist at
                         destination
 
-  Encryption Options:
-    Currently in testing. NOTE: For encryption mode PCM, you can
-    explicitly set hex XOR value (4th byte of the original file) by "-m
-    pcm,<xor_hex>" to produce identical result. However, this is not
-    needed in the whole decryption scheme in the game
+encryption options:
+  Currently in testing. NOTE: For encryption mode PCM, you can explicitly
+  set hex XOR value (4th byte of the original file) by "-m pcm,<xor_hex>" to
+  produce identical result. However, this is not needed in the whole
+  decryption scheme in the game
 
-    -e, --encryption    Enable encryption mode
-    -m "MODE", --mode="MODE"
-                        Encryption mode (ZIP,LZ4,PCM), case-insensitive
+  -e, --encryption      Enable encryption mode
+  -m MODE, --mode MODE  Encryption mode (ZIP,LZ4,PCM)
 ```
 
 ## Example
@@ -57,17 +56,17 @@ Options:
 Directory decryption mode, overwrite, unpack PVR but not keeping file, log to debug.log
 
 ```
-python main.py -i example -o example_out -w -v
+python main.py example example_out -w -v
 ```
 
 Single file decryption mode, overwrite, unpack PVR and keeping file
 
 ```
-python main.py -i example/icon-gift/531009.png -o example/icon-gift -w -k
+python main.py example/icon-gift/531009.png example/icon-gift -w -k
 ```
 
 Single file encryption, PCM mode with 0x4C as XOR variable (not specified means random) (Not in development)
 
 ```
-python main.py -i python main.py -i example_dec/video/cap2.mp4 -o example_dec_enc -v -e -m pcm,4c
+python main.py example_dec/video/cap2.mp4 example_dec_enc -v -e -m pcm,4c
 ```
