@@ -10,6 +10,7 @@ Decrypt assets for the game
 ## Notes
 
 This tool can decrypt/unpack following assets automatically:
+
 - Text assets (lua,json,etc.)
 - Audio/video assets (mp3,mp4)
 - PNGs assets (Live2D textures,Spine sprites, PVR textures)
@@ -70,3 +71,37 @@ Single file encryption, PCM mode with 0x4C as XOR variable (not specified means 
 ```
 python main.py example_dec/video/cap2.mp4 example_dec_enc -v -e -m pcm,4c
 ```
+
+# Extras
+
+<details>
+  <summary> AWB download and extract scripts</summary>
+
+Download external assets .awb from ext_assets (Android only). Supports downloading from EN and CN (default) region.
+
+## Usage
+
+```
+usage: awb.py [-h] [-r REGION] [-t] OUTPUT
+
+Download and extract external .awb assets
+
+positional arguments:
+  OUTPUT                Extracted Data Destination (MUST BE A FOLDER)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r REGION, --region REGION
+                        Choose the region of the assets (EN/CN), default: CN
+  -t, --test            Test mode, only download 3 files.
+```
+
+## Example
+
+Test download assets from EN server
+
+```
+python awb.py example -t -r EN
+```
+
+</details>
