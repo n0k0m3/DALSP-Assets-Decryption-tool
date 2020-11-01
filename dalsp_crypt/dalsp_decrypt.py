@@ -68,13 +68,14 @@ class initWithMNGData:
                 im = Image.open(io.BytesIO(image_file))
                 if self.dal_dec.verbose:
                     self.logger.info("Image header format: " + im.format)
+                old_format = im.format
                 data = io.BytesIO()
                 im = im.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im
                 im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
                 im.save(data, im_format)
                 png_file = data.getvalue()
                 if self.dal_dec.verbose:
-                    self.logger.info("Convert " + im.format +
+                    self.logger.info("Convert " + old_format +
                                      " to " + self.base_ext[1:].upper())
                 self.dal_dec.write(filepath, png_file)
             else:
