@@ -37,12 +37,6 @@ def main():
 
     options = parser.parse_args()
 
-    if options.input_path is None or options.output_path is None:
-        print()
-        print(
-            "No input or output path specified. Run \"python main.py -h\" for more details")
-        print()
-        return
     if not options.encryption:
         decrypt = dalsp_decrypt.DateALive_decryption(options)
         if os.path.isfile(options.input_path):
