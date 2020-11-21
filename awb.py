@@ -75,7 +75,7 @@ def main():
     if options.version is None:
       ver = re.findall(r"(\d.+)\/", stripped)
       ver_pv = [pv(i) for i in ver]
-      #ver = ver[ver_pv.index(max(ver_pv))]
+      ver = ver[ver_pv.index(max(ver_pv))]
     else:
       ver = options.version
     # get the file list
