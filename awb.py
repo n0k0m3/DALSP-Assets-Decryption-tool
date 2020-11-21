@@ -55,6 +55,8 @@ def main():
     parser.add_argument("-r", "--region", dest="region", default="CN",
                         help="Choose the region of the assets (EN/CN), default: CN", metavar="REGION",
                         choices=["EN", "CN"])
+    parser.add_argument("-v", "--version", dest="version", default=None,
+                        help="Choose the version of the AWB ext_assets", metavar="VERSION")
     parser.add_argument("-t", "--test",
                         action="store_true", dest="test", default=False,
                         help="Test mode, only download 3 files.")
@@ -70,10 +72,12 @@ def main():
     stripped = re.sub('<[^<]+?>', '', content)
 
     # getting highest version ext_assets
-    ver = re.findall(r"(\d.+)\/", stripped)
-    ver_pv = [pv(i) for i in ver]
-    ver = ver[ver_pv.index(max(ver_pv))]
-
+    if options.version is None:
+      ver = re.findall(r"(\d.+)\/", stripped)
+      ver_pv = [pv(i) for i in ver]
+      #ver = ver[ver_pv.index(max(ver_pv))]
+    else:
+      ver = options.version
     # get the file list
     extlist = posixpath.join(ver, "extlist.json")
     filelist = json.loads(urllib.request.urlopen(

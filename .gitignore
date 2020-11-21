@@ -4,3 +4,4 @@ tmp*
 *pycache*
 *.log
 .idea
+*.0
