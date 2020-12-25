@@ -64,8 +64,10 @@ def main():
 
     url = {
         "CN": "http://c.dal.heitao2014.com/dal/ext_assets/release_android/",
-        "EN": "http://c-dal-en.heitaoglobal.com/dal_eng/ext_assets/release_android/"
+        "EN": "http://c-ml.datealive.com/dal_global/ext_assets/release_android/"
     }
+    # http://c-ml.datealive.com/dal_global/release_android/
+    # http://c-dal-ml.heitaoglobal.com/dal_global/release_android/
     url = url[options.region]
 
     content = urllib.request.urlopen(url).read().decode("utf-8")
