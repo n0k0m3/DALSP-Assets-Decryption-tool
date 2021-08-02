@@ -6,6 +6,7 @@ import sys
 import zlib
 
 import lz4.block
+import numpy as np
 from PIL import Image
 from tex2img import basisu_decompress
 
@@ -38,15 +39,18 @@ class initWithMNGData:
                 im_rgba = im_rgb.copy()
                 im_rgba.putalpha(im_a)
                 with io.BytesIO() as output:
-                    im_rgba = im_rgba.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im_rgba
-                    im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+                    im_rgba = im_rgba.convert(
+                        'RGB') if self.base_ext[1:].lower() == 'jpg' else im_rgba
+                    im_format = 'JPEG' if self.base_ext[1:].lower(
+                    ) == 'jpg' else self.base_ext[1:].upper()
                     im_rgba.save(output, format=im_format)
                     self.dal_dec.write(filepath, output.getvalue())
             except:
                 if self.dal_dec.verbose:
                     self.logger.error("Unknown alpha process scheme in files")
                     self.logger.error(filepath)
-                    self.logger.error("Send files to the maintainer for debugging")
+                    self.logger.error(
+                        "Send files to the maintainer for debugging")
                 else:
                     print("An error occured in file", filepath,
                           ". Please enable -v or --verbose to debug")
@@ -55,7 +59,8 @@ class initWithMNGData:
                 if self.dal_dec.verbose:
                     self.logger.error("Alpha file size mismatch")
                     self.logger.error(filepath)
-                    self.logger.error("Send files to the maintainer for debugging")
+                    self.logger.error(
+                        "Send files to the maintainer for debugging")
                 else:
                     print("An error occured in file", filepath,
                           ". Please enable -v or --verbose to debug")
@@ -70,8 +75,10 @@ class initWithMNGData:
                     self.logger.info("Image header format: " + im.format)
                 old_format = im.format
                 data = io.BytesIO()
-                im = im.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im
-                im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+                im = im.convert(
+                    'RGB') if self.base_ext[1:].lower() == 'jpg' else im
+                im_format = 'JPEG' if self.base_ext[1:].lower(
+                ) == 'jpg' else self.base_ext[1:].upper()
                 im.save(data, im_format)
                 png_file = data.getvalue()
                 if self.dal_dec.verbose:
@@ -116,8 +123,10 @@ class initWithMNGData:
         rgba_data = basisu_decompress(img, width, height, mode)
         im = Image.frombytes("RGBA", (width, height), rgba_data)
         with io.BytesIO() as result:
-            im = im.convert('RGB') if self.base_ext[1:].lower() == 'jpg' else im
-            im_format = 'JPEG' if self.base_ext[1:].lower() == 'jpg' else self.base_ext[1:].upper()
+            im = im.convert(
+                'RGB') if self.base_ext[1:].lower() == 'jpg' else im
+            im_format = 'JPEG' if self.base_ext[1:].lower(
+            ) == 'jpg' else self.base_ext[1:].upper()
             im.save(result, format=im_format)
             result = result.getvalue()
         return result
@@ -151,48 +160,56 @@ class DateALive_decryption:
             self.logger.setLevel(logging.INFO)
 
     @staticmethod
-    def decryptZIP(data, data_size):
-        data = bytearray(data)
+    def decryptZIP(data:bytes, data_size:int)->bytes:
         if data[:2] == bytes([0xf8, 0x8b]) and data[2] in [0x2d, 0x3d]:
+
+            # From bytearray to np array
+            data = np.array(np.frombuffer(data, np.uint8))
+
+            # Reform DEFLATE header
             data[1] = 0x1f
             data[2] = 0x8b
+
+            # decryptZIP
             var_1 = 0x14
-            if (data_size - 3) < int(str(0x15)):
+
+            if (data_size - 3) < 0x15:
                 var_1 = data_size - 3
             if 0 < var_1:
                 i = 2
                 n = var_1 + 2
-            while True:
-                var_2 = var_1 % 0x2d
-                var_1 = data[i + 1] + var_2
-                data[i + 1] = var_2 ^ data[i + 1]
-                i = i + 1
-                if not (i < n):
-                    break
-            data = zlib.decompress(data[1:], zlib.MAX_WBITS | 32)
+
+            data = data[1:]
+
+            var_1_array = data[i:n-1]
+            var_1_array = (np.cumsum(var_1_array)+0x14) % 0x2d
+            var_1_array = np.append([var_1], var_1_array).astype(int)
+
+            data[i:n] = data[i:n] ^ var_1_array
+            data = data.tobytes()
+
+            # Decompress zlib
+            data = zlib.decompress(data, zlib.MAX_WBITS | 32)
+
         return data, 1
 
     @staticmethod
-    def decryptToPcm(data, data_size):
+    def decryptToPcm(data:bytes, data_size:int)->bytes:
         data = bytearray(data)
         while data[:3] == bytes([0xFB, 0x1B, 0x9D]):
             xor_var = data[3]
-            n = data_size - 4
+            # n = data_size - 4
             buff = data[4:]
             if 4 < data_size:
-                i = 0
-                while True:
-                    n = n - 1
-                    buff[i] = buff[i] ^ xor_var
-                    i = i + 1
-                    if not (n != 0):
-                        break
+                buff = np.array(buff)
+                buff = buff ^ xor_var
+                buff = bytearray(buff.tobytes())
             data = buff
             data_size = len(data)
         return bytes(data), 1
 
     @staticmethod
-    def decryptLZ4(data):
+    def decryptLZ4(data:bytes)->bytes:
         if data[:3] == bytes([0xf8, 0x8b, 0x2b]):
             while data[:3] == bytes([0xf8, 0x8b, 0x2b]):
                 data = bytes(data[3:])
@@ -275,7 +292,6 @@ if __name__ == "__main__":
         verbose = True
         keepPVR = False
         overwrite = True
-
 
     decrypt = DateALive_decryption(options)
     decrypt.crypt_single_file()
