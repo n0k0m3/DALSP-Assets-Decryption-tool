@@ -1,3 +1,4 @@
 lz4
 Pillow
 tex2img
+numpy
