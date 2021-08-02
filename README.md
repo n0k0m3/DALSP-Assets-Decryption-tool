@@ -4,8 +4,8 @@ Decrypt assets for the game
 
 ## Requirements
 
-- [Python 3.6 or 3.7](https://www.python.org/downloads/) (other versions are untested but minimum is Python 3+)
-- pip modules `lz4-python`, `Pillow`, `tex2img`: `pip install -r requirements.txt`
+- [Python 3.9](https://www.python.org/downloads/) (other versions are untested but minimum is Python 3+)
+- PyPI dependencies: `pip install -r requirements.txt`
 
 ## Notes
 
