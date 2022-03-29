@@ -1,9 +1,8 @@
 import logging
+import lz4.block
 import os
 import zlib
 from random import randint
-
-import lz4.block
 
 from dalsp_crypt.dalsp_decrypt import DateALive_decryption
 

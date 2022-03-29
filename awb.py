@@ -7,9 +7,8 @@ import urllib.parse
 import urllib.request
 from argparse import ArgumentParser
 from multiprocessing.pool import ThreadPool
-from shutil import rmtree
-
 from pkg_resources import parse_version as pv
+from shutil import rmtree
 
 
 def write(path, content):
@@ -75,11 +74,11 @@ def main():
 
     # getting highest version ext_assets
     if options.version is None:
-      ver = re.findall(r"(\d.+)\/", stripped)
-      ver_pv = [pv(i) for i in ver]
-      ver = ver[ver_pv.index(max(ver_pv))]
+        ver = re.findall(r"(\d.+)\/", stripped)
+        ver_pv = [pv(i) for i in ver]
+        ver = ver[ver_pv.index(max(ver_pv))]
     else:
-      ver = options.version
+        ver = options.version
     # get the file list
     extlist = posixpath.join(ver, "extlist.json")
     filelist = json.loads(urllib.request.urlopen(

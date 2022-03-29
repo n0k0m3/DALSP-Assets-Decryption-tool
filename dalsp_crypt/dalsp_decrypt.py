@@ -1,12 +1,11 @@
 import io
 import logging
+import lz4.block
+import numpy as np
 import os
 import struct
 import sys
 import zlib
-
-import lz4.block
-import numpy as np
 from PIL import Image
 from tex2img import basisu_decompress
 
@@ -160,7 +159,7 @@ class DateALive_decryption:
             self.logger.setLevel(logging.INFO)
 
     @staticmethod
-    def decryptZIP(data:bytes, data_size:int)->bytes:
+    def decryptZIP(data: bytes, data_size: int) -> bytes:
         if data[:2] == bytes([0xf8, 0x8b]) and data[2] in [0x2d, 0x3d]:
 
             # From bytearray to np array
@@ -181,8 +180,8 @@ class DateALive_decryption:
 
             data = data[1:]
 
-            var_1_array = data[i:n-1]
-            var_1_array = (np.cumsum(var_1_array)+0x14) % 0x2d
+            var_1_array = data[i:n - 1]
+            var_1_array = (np.cumsum(var_1_array) + 0x14) % 0x2d
             var_1_array = np.append([var_1], var_1_array).astype(int)
 
             data[i:n] = data[i:n] ^ var_1_array
@@ -194,7 +193,7 @@ class DateALive_decryption:
         return data, 1
 
     @staticmethod
-    def decryptToPcm(data:bytes, data_size:int)->bytes:
+    def decryptToPcm(data: bytes, data_size: int) -> bytes:
         data = bytearray(data)
         while data[:3] == bytes([0xFB, 0x1B, 0x9D]):
             xor_var = data[3]
@@ -209,7 +208,7 @@ class DateALive_decryption:
         return bytes(data), 1
 
     @staticmethod
-    def decryptLZ4(data:bytes)->bytes:
+    def decryptLZ4(data: bytes) -> bytes:
         if data[:3] == bytes([0xf8, 0x8b, 0x2b]):
             while data[:3] == bytes([0xf8, 0x8b, 0x2b]):
                 data = bytes(data[3:])
@@ -292,6 +291,7 @@ if __name__ == "__main__":
         verbose = True
         keepPVR = False
         overwrite = True
+
 
     decrypt = DateALive_decryption(options)
     decrypt.crypt_single_file()
